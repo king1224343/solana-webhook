@@ -1,14 +1,12 @@
-from fastapi import FastAPI, Request
-import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.post("/")
-async def webhook_listener(request: Request):
-    data = await request.json()
-    print("馃敂 Webhook Triggered!")
-    print(data)
-    return {"status": "received", "data": data}
+class Payload(BaseModel):
+    data: dict
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+@app.post("/")
+async def webhook_handler(payload: Payload):
+    print("✅ Received webhook:", payload.data)
+    return {"status": "success"}
