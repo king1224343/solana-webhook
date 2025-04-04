@@ -8,5 +8,5 @@ class Payload(BaseModel):
 
 @app.post("/")
 async def webhook_handler(payload: Payload):
-    print("✅ Received webhook:", payload.data)
+    print("聛7录3 Received webhook:", payload.data)
     return {"status": "success"}
