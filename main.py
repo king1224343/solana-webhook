@@ -1,51 +1,25 @@
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
-import requests
-import datetime
+import uvicorn
 
 app = FastAPI()
 
-API_KEY = "321f2b36-0d57-4785-8f4b-8c660205aa75"
-HELIUS_URL = f"https://mainnet.helius-rpc.com/?api-key={API_KEY}"
-
+# 用于接收 webhook payload
 class Payload(BaseModel):
     data: dict
 
 @app.post("/")
 async def webhook_handler(payload: Payload):
-    print("✅ Received webhook:", payload.data)
+    print("🟢 Received webhook:", payload.data)
     return {"status": "success"}
 
+# 测试用接口，Render 可用性验证
 @app.get("/check-new-tokens")
-async def check_new_tokens():
-    now = datetime.datetime.utcnow()
-    start_ts = int((now - datetime.timedelta(seconds=60)).timestamp() * 1000)
-    end_ts = int(now.timestamp() * 1000)
+async def check_tokens():
+    return {"message": "接口已部署成功 🎉"}
 
-    body = {
-        "jsonrpc": "2.0",
-        "id": "new-tokens",
-        "method": "getTransactions",
-        "params": {
-            "types": ["INITIALIZE_MINT", "CREATE_ACCOUNT"],
-            "startSlot": start_ts,
-            "endSlot": end_ts,
-            "limit": 20
-        }
-    }
-
-    try:
-        res = requests.post(HELIUS_URL, json=body)
-        txs = res.json().get("result", [])
-
-        tokens = []
-        for tx in txs:
-            if isinstance(tx, dict):
-                tokens.append(tx.get("signature", "no-signature"))
-            else:
-                print("⚠️ 非预期 tx 类型:", type(tx), tx)
-
-        return {"new_tokens": tokens}
-    except Exception as e:
-        print("❌ 错误:", str(e))
-        return {"error": "failed to query helius"}
+# Render 自动注入 PORT 环境变量，适配主函数
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
